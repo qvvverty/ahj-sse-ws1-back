@@ -1,0 +1,31 @@
+{
+  "name": "ahj-sse-ws-1-back",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "build": "yarn install --production",
+    "start": "node server.js",
+    "watch": "forever -w server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qvvverty/ahj-sse-ws1-back.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/qvvverty/ahj-sse-ws1-back/issues"
+  },
+  "homepage": "https://github.com/qvvverty/ahj-sse-ws1-back#readme",
+  "dependencies": {
+    "koa": "^2.13.0",
+    "ws": "^7.4.2"
+  },
+  "devDependencies": {
+    "eslint": "^7.17.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "forever": "^3.0.4"
+  }
+}
