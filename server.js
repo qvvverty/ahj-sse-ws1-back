@@ -8,6 +8,8 @@ const port = process.env.PORT || 7070;
 
 const app = new Koa();
 
+let newUser;
+
 app.use(koaBody({
   multipart: true,
 }));
@@ -26,11 +28,18 @@ app.use(async (ctx) => {
   // ctx.response.status = 200;
   // console.log('response sent');
   // console.log(ctx.response);
-  // wsServer.forEach((socket) => {
-  //   if (socket.name === ctx.request.body) {
-
-  //   }
-  // });
+  let userUnique = true;
+  wsServer.clients.forEach((socket) => {
+    if (socket.user === ctx.request.body) {
+      userUnique = false;
+    }
+  });
+  if (userUnique) {
+    ctx.response.status = 200;
+    newUser = ctx.request.body;
+  } else {
+    ctx.response.status = 403;
+  }
 });
 
 const server = http.createServer(app.callback());
@@ -44,38 +53,33 @@ const wsServer = new WS.Server({
   // path: '/ws',
 });
 wsServer.on('upgrade', (event) => {
-  console.log('Aaa!');
-  console.log(event);
+  // console.log('Aaa!');
+  // console.log(event);
 });
 
 wsServer.on('connection', (ws, req) => {
-  console.log('connected to ws');
-  console.log(req);
+  console.log('new connection to ws');
+  ws.user = newUser;
+  // console.log(req);
   const errCallback = (err) => {
     if (err) {
       console.error(err);
     }
   };
 
-  // ws.send(JSON.stringify(req), errCallback);
-
   ws.on('message', (msg) => {
-    // if (!ws.user) {
-    //   ws.user = msg;
-    // }
-
     console.log('msg received');
 
     const msgObj = {
-      user: ws.user,
+      from: ws.user,
       msg,
     };
 
     wsServer.clients.forEach((socket) => {
       socket.send(JSON.stringify(msgObj), errCallback);
-      console.log('sent');
+      console.log('msg sent to', socket.user);
     });
-    ws.send('i hear you!', errCallback);
+    // ws.send('i hear you!', errCallback);
     // ws.send(JSON.stringify(ws), errCallback);
   });
 
