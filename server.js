@@ -2,13 +2,13 @@ const http = require('http');
 const Koa = require('koa');
 const koaBody = require('koa-body');
 const WS = require('ws');
-// const koaBody = require('koa-body');
 
 const port = process.env.PORT || 7070;
 
 const app = new Koa();
 
-let newUser;
+// const users = ['babaika', 'koschey', 'chupakabra'];
+const users = [];
 
 app.use(koaBody({
   multipart: true,
@@ -23,20 +23,10 @@ app.use(async (ctx, next) => {
 });
 
 app.use(async (ctx) => {
-  // const request = ctx.request.query;
-  // const { method } = request;
-  // ctx.response.status = 200;
-  // console.log('response sent');
-  // console.log(ctx.response);
-  let userUnique = true;
-  wsServer.clients.forEach((socket) => {
-    if (socket.user === ctx.request.body) {
-      userUnique = false;
-    }
-  });
-  if (userUnique) {
+  if (!users.includes(ctx.request.body)) {
     ctx.response.status = 200;
-    newUser = ctx.request.body;
+    ctx.response.body = JSON.stringify(users);
+    users.push(ctx.request.body);
   } else {
     ctx.response.status = 403;
   }
@@ -53,13 +43,12 @@ const wsServer = new WS.Server({
   // path: '/ws',
 });
 wsServer.on('upgrade', (event) => {
-  // console.log('Aaa!');
-  // console.log(event);
+
 });
 
 wsServer.on('connection', (ws, req) => {
   console.log('new connection to ws');
-  ws.user = newUser;
+  ws.user = users[users.length - 1];
   // console.log(req);
   const errCallback = (err) => {
     if (err) {
