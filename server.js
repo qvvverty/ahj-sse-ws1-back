@@ -7,7 +7,6 @@ const port = process.env.PORT || 7070;
 
 const app = new Koa();
 
-// const users = ['babaika', 'koschey', 'chupakabra'];
 const users = [];
 
 app.use(koaBody({
@@ -42,12 +41,14 @@ const wsServer = new WS.Server({
   // noServer: true,
   // path: '/ws',
 });
-wsServer.on('upgrade', (event) => {
 
-});
+// wsServer.on('upgrade', (event) => {
 
-wsServer.on('connection', (ws, req) => {
+// });
+
+wsServer.on('connection', (ws/* , req */) => {
   console.log('new connection to ws');
+  // eslint-disable-next-line no-param-reassign
   ws.user = users[users.length - 1];
   // console.log(req);
   const errCallback = (err) => {
@@ -56,23 +57,53 @@ wsServer.on('connection', (ws, req) => {
     }
   };
 
-  ws.on('message', (msg) => {
+  const newUserMsg = {
+    from: 'server',
+    type: 'new user',
+    message: ws.user,
+  };
+  const newUserMsgStr = JSON.stringify(newUserMsg);
+
+  wsServer.clients.forEach((socket) => {
+    if (socket.user !== ws.user) {
+      socket.send(newUserMsgStr, errCallback);
+      console.log('msg sent to', socket.user);
+    }
+  });
+
+  ws.on('message', (message) => {
     console.log('msg received');
 
     const msgObj = {
       from: ws.user,
-      msg,
+      message,
     };
+    const msgObjStr = JSON.stringify(msgObj);
 
     wsServer.clients.forEach((socket) => {
-      socket.send(JSON.stringify(msgObj), errCallback);
+      socket.send(msgObjStr, errCallback);
       console.log('msg sent to', socket.user);
     });
     // ws.send('i hear you!', errCallback);
     // ws.send(JSON.stringify(ws), errCallback);
   });
 
-  ws.on('close', (event) => {
+  ws.on('close', (/* event */) => {
+    // console.log(event);
     // console.log(wsServer.clients.size);
+    const deleteIndex = users.indexOf(ws.user);
+    if (deleteIndex >= 0) users.splice(deleteIndex, 1);
+    console.log(`${ws.user}: connection closed`);
+
+    const userLeftMsg = {
+      from: 'server',
+      type: 'user left',
+      message: ws.user,
+    };
+    const userLeftMsgStr = JSON.stringify(userLeftMsg);
+    wsServer.clients.forEach((socket) => {
+      socket.send(userLeftMsgStr, errCallback);
+      console.log('msg sent to', socket.user);
+    });
   });
 });
