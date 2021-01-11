@@ -65,10 +65,10 @@ wsServer.on('connection', (ws/* , req */) => {
   const newUserMsgStr = JSON.stringify(newUserMsg);
 
   wsServer.clients.forEach((socket) => {
-    if (socket.user !== ws.user) {
-      socket.send(newUserMsgStr, errCallback);
-      console.log('msg sent to', socket.user);
-    }
+    // if (socket.user !== ws.user) {
+    socket.send(newUserMsgStr, errCallback);
+    console.log('msg sent to', socket.user);
+    // }
   });
 
   ws.on('message', (message) => {
