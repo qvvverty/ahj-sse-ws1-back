@@ -15,8 +15,7 @@ app.use(koaBody({
 
 app.use(async (ctx, next) => {
   ctx.response.set({
-    // 'Access-Control-Allow-Origin': 'https://qvvverty.github.io',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': 'https://qvvverty.github.io',
   });
   await next();
 });
@@ -38,19 +37,11 @@ server.listen(port, () => {
 
 const wsServer = new WS.Server({
   server,
-  // noServer: true,
-  // path: '/ws',
 });
 
-// wsServer.on('upgrade', (event) => {
-
-// });
-
-wsServer.on('connection', (ws/* , req */) => {
-  console.log('new connection to ws');
+wsServer.on('connection', (ws) => {
   // eslint-disable-next-line no-param-reassign
   ws.user = users[users.length - 1];
-  // console.log(req);
   const errCallback = (err) => {
     if (err) {
       console.error(err);
@@ -65,15 +56,10 @@ wsServer.on('connection', (ws/* , req */) => {
   const newUserMsgStr = JSON.stringify(newUserMsg);
 
   wsServer.clients.forEach((socket) => {
-    // if (socket.user !== ws.user) {
     socket.send(newUserMsgStr, errCallback);
-    console.log('msg sent to', socket.user);
-    // }
   });
 
   ws.on('message', (message) => {
-    console.log('msg received');
-
     const msgObj = {
       from: ws.user,
       message,
@@ -82,18 +68,12 @@ wsServer.on('connection', (ws/* , req */) => {
 
     wsServer.clients.forEach((socket) => {
       socket.send(msgObjStr, errCallback);
-      console.log('msg sent to', socket.user);
     });
-    // ws.send('i hear you!', errCallback);
-    // ws.send(JSON.stringify(ws), errCallback);
   });
 
-  ws.on('close', (/* event */) => {
-    // console.log(event);
-    // console.log(wsServer.clients.size);
+  ws.on('close', () => {
     const deleteIndex = users.indexOf(ws.user);
     if (deleteIndex >= 0) users.splice(deleteIndex, 1);
-    console.log(`${ws.user}: connection closed`);
 
     const userLeftMsg = {
       from: 'server',
@@ -103,7 +83,6 @@ wsServer.on('connection', (ws/* , req */) => {
     const userLeftMsgStr = JSON.stringify(userLeftMsg);
     wsServer.clients.forEach((socket) => {
       socket.send(userLeftMsgStr, errCallback);
-      console.log('msg sent to', socket.user);
     });
   });
 });
